@@ -26,7 +26,7 @@ class Item(Base):
     __tablename__ = 'item'
     
     id: Mapped[int] = mapped_column(primary_key=True)
-    cursor: Mapped[String] = mapped_column(nullable=True)
+    cursor: Mapped[str] = mapped_column(nullable=True)
 
 # Function to actually initialize all the tables
 def create_tables():

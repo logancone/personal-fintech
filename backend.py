@@ -14,53 +14,17 @@ from test_database import create_tables
 
 from test_database import Session, Transaction
 
-load_dotenv()
+from backend_helper import pull_available_transactions
 
-client_id = os.getenv("PLAID_CLIENT_ID")
-secret_id = os.getenv("PLAID_SECRET")
+from fastapi import FastAPI
 
-configuration = plaid.Configuration(
-    host=plaid.Environment.Sandbox,
-    api_key={
-        'clientId': client_id,
-        'secret': secret_id,
-    }
-)
+from test_database import Session, Transaction
+from sqlalchemy import select
 
-api_client = plaid.ApiClient(configuration)
-client = plaid_api.PlaidApi(api_client)
+# 
+app = FastAPI()
 
-access_token = os.getenv("SANDBOX_ACCESS_TOKEN")
-
-
-
-request = TransactionsSyncRequest(
-    access_token=access_token
-)
-response = client.transactions_sync(request)
-
-transactions = [response['added']]
-
-# print(transactions[0])
-# Retrieve all the transactions i guess
-while response['has_more']:
-    request = TransactionsSyncRequest(
-        access_token=access_token,
-        cursor=response['next_cursor']
-    )
-    response=client.transactions_sync(request)
-    transactions.append(response['added'])
-
-if os.path.exists("app_database.db"):
-    os.remove("app_database.db")
-
-create_tables()
-
-
-with Session() as session:
-    with session.begin():
-        for transaction in transactions:
-            new_transaction = Transaction(transaction_amount=transaction['amount'], transaction_date=transaction["date"])
-            session.add(new_transaction)
-            
-
+@app.get("/api/hello")
+def hello():
+    return {"num_transactions": pull_transaction_num(),
+            "amount": pull_total_money()}

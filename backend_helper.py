@@ -12,7 +12,7 @@ import os
 
 from test_database import create_tables
 
-from test_database import Session, Transaction
+from test_database import Session, Transaction, Item
 
 
 load_dotenv()
@@ -33,35 +33,51 @@ configuration = plaid.Configuration(
 api_client = plaid.ApiClient(configuration)
 client = plaid_api.PlaidApi(api_client)
 
-def get_available_transactions():
+def store_transaction_list(transactions):
+    with Session() as session:
+        with session.begin():
+            for transaction in transactions:
+                new_transaction = Transaction(transaction_amount=transaction['amount'], transaction_date=transaction["date"])
+                session.add(new_transaction)
     
-request = TransactionsSyncRequest(
-    access_token=access_token
-)
-response = client.transactions_sync(request)
+    
+def pull_available_transactions():
+    with Session() as session:
+        with session.begin():
+            item = session.get(Item, 0)
+            assert item is not None
+            
+            if item.cursor is not None:
+                request = TransactionsSyncRequest(
+                    access_token=access_token,
+                    cursor = item.cursor
+                )
+                response = client.transactions_sync(request)
 
-transactions = response['added']
+                transactions = response['added']
+            else:
+                request = TransactionsSyncRequest(
+                    access_token=access_token
+                )
+                response = client.transactions_sync(request)
 
-# print(transactions[0])
-# Retrieve all the transactions i guess
-while response['has_more']:
-    request = TransactionsSyncRequest(
-        access_token=access_token,
-        cursor=response['next_cursor']
-    )
-    response=client.transactions_sync(request)
-    transactions += response['added']
+                transactions = response['added']
 
-if os.path.exists("app_database.db"):
-    os.remove("app_database.db")
+            while response['has_more']:
+                request = TransactionsSyncRequest(
+                    access_token=access_token,
+                    cursor=response['next_cursor']
+                )
+                response=client.transactions_sync(request)
+                transactions += response['added']
+            
+            item.cursor = response['next_cursor']
+            
+            store_transaction_list(transactions)
+            
+            
+            return len(transactions)
+        
 
-create_tables()
-
-
-with Session() as session:
-    with session.begin():
-        for transaction in transactions:
-            new_transaction = Transaction(transaction_amount=transaction['amount'], transaction_date=transaction["date"])
-            session.add(new_transaction)
             
 
