@@ -1,15 +1,3 @@
-import plaid
-from plaid.api import plaid_api
-from plaid.model.sandbox_public_token_create_request import SandboxPublicTokenCreateRequest
-from plaid.model.sandbox_public_token_create_request_options import SandboxPublicTokenCreateRequestOptions
-from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
-from plaid.model.transactions_sync_request import TransactionsSyncRequest
-
-from plaid.model.products import Products
-
-from dotenv import load_dotenv
-import os
-
 from test_database import create_tables
 
 from test_database import Session, Transaction
@@ -21,10 +9,23 @@ from fastapi import FastAPI
 from test_database import Session, Transaction
 from sqlalchemy import select
 
-# 
+import time
+
+
 app = FastAPI()
 
-@app.get("/api/hello")
-def hello():
-    return {"num_transactions": pull_transaction_num(),
-            "amount": pull_total_money()}
+create_tables()
+
+@app.get("/api/retrieve_transactions")
+def retrieve_transactions():
+    with Session() as session:
+        transactions = session.scalars(select(Transaction)).all()
+        
+        return {"num_transactions": len(transactions),
+                "transactions": transactions}
+
+
+for i in range(100):
+    pull_available_transactions()
+
+    time.sleep(5)
