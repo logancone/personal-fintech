@@ -10,9 +10,9 @@ from plaid.model.products import Products
 from dotenv import load_dotenv
 import os
 
-from test_database import create_tables
+from database import create_tables
 
-from test_database import Session, Transaction, Item
+from database import Session, Transaction, Item
 
 
 load_dotenv()
@@ -37,11 +37,19 @@ def store_transaction_list(transactions):
     with Session() as session:
         with session.begin():
             for transaction in transactions:
-                new_transaction = Transaction(transaction_amount=transaction['amount'], transaction_date=transaction["date"])
+                new_transaction = Transaction(
+                    transaction_id=transaction['transaction_id'], 
+                    merchant_name=transaction['merchant_name'],
+                    amount=float(transaction['amount']),
+                    date=transaction['date'],
+                    category="NONE",
+                    pending=transaction['pending'],
+                    pending_transaction_id=transaction['pending_transaction_id'])
+                
                 session.add(new_transaction)
     
     
-def pull_available_transactions():
+def sync_available_transactions():
     with Session() as session:
         with session.begin():
             item = session.get(Item, 0)

@@ -2,7 +2,8 @@ import sqlite3
 from sqlalchemy import create_engine, Column, Integer, String, Date, Text, ForeignKey, Numeric
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Mapped, mapped_column
 
-from datetime import date
+# from datetime import date
+import datetime
 from decimal import Decimal
 
 from dataclasses import dataclass
@@ -18,9 +19,13 @@ class Base(DeclarativeBase):
 class Transaction(Base):
     __tablename__ = 'transaction'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    transaction_amount: Mapped[Decimal] = mapped_column(Numeric(precision=19, scale=4))
-    transaction_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    transaction_id: Mapped[str] = mapped_column(primary_key=True)
+    merchant_name: Mapped[str]
+    amount: Mapped[Decimal] = mapped_column(Numeric(precision=19, scale=4))
+    date: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
+    category: Mapped[str]
+    pending: Mapped[bool]
+    pending_transaction_id: Mapped[str] = mapped_column(nullable=True)
     
 class Item(Base):
     __tablename__ = 'item'

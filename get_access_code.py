@@ -10,9 +10,9 @@ from plaid.model.products import Products
 from dotenv import load_dotenv
 import os
 
-from test_database import create_tables
+from database import create_tables
 
-from test_database import Session, Transaction
+from database import Session, Transaction
 
 load_dotenv()
 

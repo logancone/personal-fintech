@@ -10,9 +10,9 @@ from plaid.model.products import Products
 from dotenv import load_dotenv
 import os
 
-from test_database import create_tables
+from database import create_tables
 
-from test_database import Session, Transaction
+from database import Session, Transaction
 
 load_dotenv()
 
@@ -48,16 +48,17 @@ while response['has_more']:
     response=client.transactions_sync(request)
     transactions += response['added']
 
-if os.path.exists("app_database.db"):
-    os.remove("app_database.db")
+print(transactions[0])
+# if os.path.exists("app_database.db"):
+#     os.remove("app_database.db")
 
-create_tables()
+# create_tables()
 
 
-with Session() as session:
-    with session.begin():
-        for transaction in transactions:
-            new_transaction = Transaction(transaction_amount=transaction['amount'], transaction_date=transaction["date"])
-            session.add(new_transaction)
+# with Session() as session:
+#     with session.begin():
+#         for transaction in transactions:
+#             new_transaction = Transaction(transaction_amount=transaction['amount'], transaction_date=transaction["date"])
+#             session.add(new_transaction)
             
 
