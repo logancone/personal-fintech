@@ -21,6 +21,12 @@ class Transaction(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     transaction_amount: Mapped[Decimal] = mapped_column(Numeric(precision=19, scale=4))
     transaction_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    
+class Item(Base):
+    __tablename__ = 'item'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cursor: Mapped[String] = mapped_column(nullable=True)
 
 # Function to actually initialize all the tables
 def create_tables():
