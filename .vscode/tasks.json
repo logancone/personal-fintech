@@ -4,7 +4,7 @@
     {
       "label": "api",
       "type": "shell",
-      "command": "python -m uvicorn webhook_test:app --reload",
+      "command": "python -m uvicorn backend:app --reload",
       "options": { "cwd": "${workspaceFolder}" },
       "isBackground": true
     },

@@ -20,7 +20,7 @@ class Transaction(Base):
     __tablename__ = 'transaction'
 
     transaction_id: Mapped[str] = mapped_column(primary_key=True)
-    merchant_name: Mapped[str]
+    merchant_name: Mapped[str] = mapped_column(nullable=True)
     amount: Mapped[Decimal] = mapped_column(Numeric(precision=19, scale=4))
     date: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
     category: Mapped[str]
@@ -31,7 +31,8 @@ class Item(Base):
     __tablename__ = 'item'
     
     id: Mapped[int] = mapped_column(primary_key=True)
-    cursor: Mapped[str] = mapped_column(nullable=True)
+    cursor: Mapped[str | None] = mapped_column(nullable=True)
+    access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 # Function to actually initialize all the tables
 def create_tables():
