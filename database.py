@@ -26,6 +26,7 @@ class Transaction(Base):
     category: Mapped[str]
     pending: Mapped[bool]
     pending_transaction_id: Mapped[str] = mapped_column(nullable=True)
+    account_id: Mapped[str | None] = mapped_column(nullable=True)
     
 class Item(Base):
     __tablename__ = 'item'

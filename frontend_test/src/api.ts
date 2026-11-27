@@ -7,7 +7,8 @@ export type Category =
   | "Shopping"
   | "Entertainment"
   | "Health"
-  | "Travel";
+  | "Travel"
+  | "Other";
 
 export interface Stream {
   id: string;
@@ -46,7 +47,22 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   Entertainment: "#e5619e",
   Health: "#1fb5a3",
   Travel: "#7fb800",
+  Other: "#8a9a93",
 };
+
+const PLAID_TO_CATEGORY: Record<string, Category> = {
+  INCOME: "Income",
+  RENT_AND_UTILITIES: "Rent & Utilities",
+  FOOD_AND_DRINK: "Food & Drink",
+  GENERAL_MERCHANDISE: "Shopping",
+  HOME_IMPROVEMENT: "Shopping",
+  TRANSPORTATION: "Transport",
+  ENTERTAINMENT: "Entertainment",
+  MEDICAL: "Health",
+  PERSONAL_CARE: "Health",
+  TRAVEL: "Travel",
+};
+
 export type Transaction = {
   id: string;
   date: Date;
@@ -57,7 +73,10 @@ export type Transaction = {
   account: string;
 };
 
-type TransactionApiResponse = Omit<Transaction, "date"> & { date: string };
+type TransactionApiResponse = Omit<Transaction, "date" | "category"> & {
+  date: string;
+  category: string;
+};
 type RetrieveTransactionsResponse = {
   transactions: TransactionApiResponse[];
   count: number;
@@ -72,13 +91,17 @@ export async function retrieveTransactions(): Promise<Transaction[]> {
 
   const data: RetrieveTransactionsResponse = await response.json();
 
-  return data.transactions.map(({ date, ...transaction }) => {
+  return data.transactions.map(({ date, category, ...transaction }) => {
     const parsedDate = new Date(`${date}T00:00:00`);
     if (Number.isNaN(parsedDate.getTime())) {
       throw new Error(`Invalid transaction date: ${date}`);
     }
 
-    return { ...transaction, date: parsedDate };
+    return {
+      ...transaction,
+      category: PLAID_TO_CATEGORY[category] ?? "Other",
+      date: parsedDate,
+    };
   });
 }
 
@@ -99,7 +122,9 @@ export async function exchangePublicToken(publicToken: string): Promise<void> {
     body: JSON.stringify({ public_token: publicToken }),
   });
   if (!response.ok) {
-    throw new Error(`Could not finish connecting the bank (${response.status}).`);
+    throw new Error(
+      `Could not finish connecting the bank (${response.status}).`,
+    );
   }
 }
 

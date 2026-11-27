@@ -13,7 +13,7 @@ from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUse
 from plaid.model.products import Products
 from sqlalchemy import select
 
-from backend_helper import get_plaid_client, sync_available_transactions
+from backend_helper import get_plaid_client, sync_available_transactions, get_account_names
 from database import Item, Session, Transaction, create_tables
 
 
@@ -37,6 +37,7 @@ class TransactionResponse(BaseModel):
     category: str
     amount: float
     pending: bool
+    account: str
     
 class TransactionsResponse(BaseModel):
     transactions: list[TransactionResponse]
@@ -144,21 +145,25 @@ def exchange_public_token(payload: PublicTokenRequest):
 @app.get("/api/retrieve_transactions", response_model=TransactionsResponse)
 def retrieve_transactions():
     with Session() as session:
-        transactions = session.scalars(select(Transaction)).all()
-        
+        item = session.get(Item, 1)
+        names = get_account_names(item.access_token) if item and item.access_token else {}
+        transactions = session.scalars(
+            select(Transaction).where(
+                Transaction.category.notin_(["TRANSFER_IN", "TRANSFER_OUT"])
+            )
+        ).all()
         return {
             "transactions": [
                 {
                     "id": t.transaction_id,
                     "date": t.date or datetime.date.today(),
-                    "merchant": t.merchant_name or "unknown",
-                    "amount": t.amount,
-                    "category": t.category or "unknown",
+                    "merchant": t.merchant_name or "Unknown",
+                    "amount": -float(t.amount),  # Plaid: outflow > 0; app: outflow < 0
+                    "category": t.category or "UNKNOWN",
                     "pending": t.pending,
-                    "account": "huh"
+                    "account": names.get(t.account_id or "", "Account"),
                 }
                 for t in transactions
             ],
-            "count": len(transactions)
+            "count": len(transactions),
         }
-
